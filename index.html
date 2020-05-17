@@ -27,14 +27,17 @@
   </head>
 
   <body>
-    <p id="p1">
-      <svg id="svg" height="500" width="700">
-      </svg>
+      <svg id="bar_svg" height="700" width="500"></svg>
+      <svg id="svg" height="700" width="700"></svg>
+
       <script>
         /*jshint esversion: 8 */
         const svg = d3.select("#svg");
+        const bar = d3.select("#bar_svg");
         const width = svg.attr("width");
         const height = svg.attr("height");
+        const bar_width = bar.attr("width");
+        const bar_height = bar.attr("height");
         const margin = { top: 20, right: 20, bottom: 20, left:20};
         const mapWidth = width - margin.left - margin.right;
         const mapHeight = height - margin.top - margin.bottom;
@@ -45,14 +48,14 @@
 
         const requestData = async function (year) {
           const stateID = await d3.tsv("/us-state-names.tsv");
-  // console.log(stateID);
+          console.log(stateID);
           const us = await d3.json("/us.json");
           // console.log(us);
           var states = topojson.feature(us, us.objects.states);
           var stateMesh = topojson.mesh(us, us.objects.states);
           var projection = d3.geoAlbersUsa().fitSize([mapWidth,mapHeight], states);
           var path = d3.geoPath().projection(projection)
-// console.log(states)
+          // console.log(states)
           map.selectAll("path").data(states.features)
                                .join("path")
                                .attr("note", d=>d.id)
@@ -64,30 +67,32 @@
                             .attr("class","outline")
                             .attr("d",path)
 
-// console.log(stateID);
+          // console.log(stateID);
           let counts = {};
           let shortcutToState = {};
+          //for bar chart
+
 
           stateID.forEach( d => {
             counts[d.name] = 0;
             shortcutToState[d.code] = d.name;
             shortcutToState[d.id] = d.name;
           });
-// console.log(shortcutToState);
+          // console.log(shortcutToState);
           var data = await d3.csv("/honeyproduction.csv");
-console.log(data);
+          // console.log(data);
           data.forEach(d => {
             if (d.year == year) {
                 counts[shortcutToState[d.state]] = Number(d.totalprod);
             }
           })
-// console.log(counts);
+          console.log(data);
 
 
 
           let nonZone = d3.values(counts).filter(d => d>0)
           let domainRange = d3.extent(nonZone)
-          console.log(domainRange);
+          // console.log(domainRange);
 
           const colorScale = d3.scaleLinear()
                                .domain(domainRange)
@@ -98,7 +103,7 @@ console.log(data);
               return colorScale(value)
             }
           })
-// console.log(d3.extent(d3.values(counts)));
+          // console.log(d3.extent(d3.values(counts)));
 
           d3.select("#slider").on("input", function() {
             let sld = d3.select(this);
@@ -156,15 +161,110 @@ console.log(data);
                 txt2.text("")
             })
 
+            //bar chars : totalproduction and stock
+
+            const xScaleProd = d3.scaleLinear()
+                             .range([bar_width/2, 0])
+                             .domain([0, d3.max(Object.values(counts))]);
+            const yScale = d3.scaleBand()
+                             .rangeRound([bar_height - 20, 0])
+                             .domain(Object.keys(counts))
+                             .padding(0.1);
+            let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
+            let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
+              if(d === "Virgin Islands of the United States"){
+                return "Virgin Islands";
+              }else {
+                return d;
+              }
+            })
+
+            bar.append("g")
+               .attr("transform","translate(150," + (bar_height - 20) + ")")
+               .call(xAxisProd);
+
+            bar.append("g")
+               .attr("transform","translate(150,0)")
+               .call(yAxis);
 
 
 
+           let totalprod_data = [];
+           let stock_data = [];
+           for(let [state, amount] of Object.entries(counts)){
+             totalprod_data.push({"state" : state,
+                                  "amount": amount});
+           };
+           data.forEach(d => {
+             if (d.year == year) {
+                 stock_data.push({"state" : shortcutToState[d.state],
+                                  "stock" : Number(d.stocks)
+                 })
+             }
+           })
+           console.log(stock_data);
+           bar.selectAll("totalprod_Rect")
+              .data(totalprod_data)
+              .enter()
+              .append("rect")
+              .attr("x", function(d) { return xScaleProd(d.amount); })
+              .attr("y", function(d) { return yScale(d.state); })
+              .attr("width", function(d) { return bar_width/2 - xScaleProd(d.amount); })
+              .attr("height", yScale.bandwidth() )
+              .attr("fill", "#69b3a2")
+              .attr("transform","translate(150,0)");
+            bar.selectAll("totalprod_Rect")
+               .data(stock_data)
+               .enter()
+               .append("rect")
+               .attr("x", function(d) { return xScaleProd(d.stock); })
+               .attr("y", function(d) { return yScale(d.state); })
+               .attr("width", function(d) { return bar_width/2 - xScaleProd(d.stock); })
+               .attr("height", yScale.bandwidth() )
+               .attr("fill", "#de6831")
+               .attr("transform","translate(150,0)");
+
+
+
+          // bar chatr : priceperlb
+          let priceperlb_data = [];
+          data.forEach(d => {
+            if (d.year == year) {
+                priceperlb_data.push({"state" : shortcutToState[d.state],
+                                 "price" : Number(d.priceperlb)
+                })
+            }
+          })
+
+          const xScalePricePerlb = d3.scaleLinear()
+                           .range([bar_width/2, bar_width])
+                           .domain([d3.min(priceperlb_data, function(d){return d.price;}) - 0.1,
+                                    d3.max(priceperlb_data, function(d){return d.price;})
+                         ]);
+          let xAxisPricePerlb = d3.axisBottom(xScalePricePerlb);
+          bar.append("g")
+             .attr("transform","translate(150," + (bar_height - 20) + ")")
+             .call(xAxisPricePerlb);
+         bar.selectAll("priceperlb_Rect")
+            .data(priceperlb_data)
+            .enter()
+            .append("rect")
+            .attr("x", function(d) { return bar_width/2; })
+            .attr("y", function(d) { return yScale(d.state); })
+            .attr("width", function(d) {
+              return xScalePricePerlb(d.price) - bar_width/2; })
+            .attr("height", yScale.bandwidth() )
+            .attr("fill", "#f0b841")
+            .attr("transform","translate(150,0)");
+
+
+        bar.selectAll(".tick line").attr("stroke", "lightgrey")
+                                    .attr("stroke-dasharray", "2,2");
+        bar.selectAll(".domain").attr("display", "none");
         };
         requestData(1998);
       </script>
       <input type="range" id="slider" min="1998" max="2012" step="1" value="1998" >
-
-    </p>
 
 
 
