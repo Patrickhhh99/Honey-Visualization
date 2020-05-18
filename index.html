@@ -83,6 +83,7 @@
 
             // console.log(shortcutToState);
             var data = await d3.csv("/honeyproduction.csv");
+            console.log(data)
 
 
             d3.select("#slider").on("input", function () {
@@ -180,14 +181,18 @@
 
                 //bar chars : totalproduction and stock
 
-                  let maxTotalProd = d3.max(data,d=>d.totalprod)
+                  let maxTotalProd = d3.max(data,d => Number(d.totalprod))
+                  console.log(maxTotalProd)
                   const xScaleProd = d3.scaleLinear()
+                    .domain([0, maxTotalProd])
                     .range([chartWidth / 2, 0])
-                    .domain([0, maxTotalProd]);
+                   
+
                   const yScale = d3.scaleBand()
                     .rangeRound([chartHeight - 20, 0])
                     .domain(Object.keys(counts))
                     .padding(0.1);
+  
                 let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
                 let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
                     if (d === "Virgin Islands of the United States") {
@@ -238,7 +243,8 @@
                     .duration(500)
                     .delay((d, i) => i * 20)
                     .attr("x", function (d) {
-                        return xScaleProd(d.amount);
+                        // return chartWidth / 2;
+                        return xScaleProd(Number(d.amount));
                     })
                     .attr("width", function (d) {
                         return chartWidth / 2 - xScaleProd(d.amount);
