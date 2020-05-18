@@ -87,6 +87,7 @@
             update(1998);
 
             function update(year) {
+
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
                 let counts = {};
@@ -169,10 +170,11 @@
 
                 //bar chars : totalproduction and stock
 
-                const xScaleProd = d3.scaleLinear()
+
+                  const xScaleProd = d3.scaleLinear()
                     .range([bar_width / 2, 0])
                     .domain([0, d3.max(Object.values(counts))]);
-                const yScale = d3.scaleBand()
+                  const yScale = d3.scaleBand()
                     .rangeRound([bar_height - 20, 0])
                     .domain(Object.keys(counts))
                     .padding(0.1);
@@ -185,8 +187,10 @@
                     }
                 })
 
+
                 // Remove Before Draw Again
                 bar.selectAll(".xAxisProd").remove();
+
                 bar.append("g")
                     .attr("class", "xAxisProd")
                     .attr("transform", "translate(150," + (bar_height - 20) + ")")
@@ -216,21 +220,22 @@
                     }
                 })
                 // console.log(stock_data);
-                // bar.selectAll(".totalProdAmount").remove();
                 bar.selectAll("rect.totalProdAmount")
-
                     .data(totalprod_data)
                     .join("rect")
                     .attr("class", "totalProdAmount")
-                    // .append("rect")
+                    .transition()
+                    .duration(500)
+                    .delay((d, i) => i * 20)
                     .attr("x", function (d) {
                         return xScaleProd(d.amount);
                     })
-                    .attr("y", function (d) {
-                        return yScale(d.state);
-                    })
                     .attr("width", function (d) {
                         return bar_width / 2 - xScaleProd(d.amount);
+                    })
+                    .transition()
+                    .attr("y", function (d) {
+                        return yScale(d.state);
                     })
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#69b3a2")
@@ -239,20 +244,23 @@
 
                 // bar.selectAll(".totalProdStock").remove();
                 bar.selectAll("rect.totalProdStock")
-
                     .data(stock_data)
                     .join("rect")
                     .attr("class", "totalProdStock")
-
+                    .transition()
+                    .duration(500)
+                    .delay((d, i) => i * 20)
                     .attr("x", function (d) {
                         return xScaleProd(d.stock);
-                    })
-                    .attr("y", function (d) {
-                        return yScale(d.state);
                     })
                     .attr("width", function (d) {
                         return bar_width / 2 - xScaleProd(d.stock);
                     })
+                    .transition()
+                    .attr("y", function (d) {
+                        return yScale(d.state);
+                    })
+
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#de6831")
                     .attr("transform", "translate(150,0)");
@@ -268,7 +276,8 @@
                     }
                 })
 
-                const xScalePricePerlb = d3.scaleLinear()
+
+                  const xScalePricePerlb = d3.scaleLinear()
                     .range([bar_width / 2, bar_width])
                     .domain([d3.min(priceperlb_data, function (d) {
                             return d.price;
@@ -286,20 +295,23 @@
                     .call(xAxisPricePerlb);
 
 
-                bar.selectAll("rect.priceLB")
 
+                bar.selectAll("rect.priceLB")
                     .data(priceperlb_data)
                     .join("rect")
-
                     .attr("class", "priceLB")
+                    .transition()
+                    .duration(500)
+                    .delay((d, i) => i * 20)
                     .attr("x", function (d) {
                         return bar_width / 2;
                     })
-                    .attr("y", function (d) {
-                        return yScale(d.state);
-                    })
                     .attr("width", function (d) {
                         return xScalePricePerlb(d.price) - bar_width / 2;
+                    })
+                    .transition()
+                    .attr("y", function (d) {
+                        return yScale(d.state);
                     })
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#f0b841")
