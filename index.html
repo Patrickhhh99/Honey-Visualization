@@ -1,273 +1,322 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <title>INFO5100 Project2</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
-
         .state {
-          fill: #EAE6E5;
-          stroke: none;
+            fill: #EAE6E5;
+            stroke: none;
         }
 
         .outline {
-          stroke: black;
-          stroke-width: 1px;
-          fill: none;
+            stroke: black;
+            stroke-width: 1px;
+            fill: none;
         }
 
         .graticule {
-          fill: none;
-          stroke: lightgrey;
+            fill: none;
+            stroke: lightgrey;
         }
-
     </style>
-  </head>
+</head>
 
-  <body>
-      <svg id="bar_svg" height="700" width="500"></svg>
-      <svg id="svg" height="700" width="700"></svg>
+<body>
+    <svg id="bar_svg" height="700" width="500"></svg>
+    <svg id="svg" height="700" width="700"></svg>
 
-      <script>
+    <script>
         /*jshint esversion: 8 */
         const svg = d3.select("#svg");
-        const bar = d3.select("#bar_svg");
+        const bar_svg = d3.select("#bar_svg");
         const width = svg.attr("width");
         const height = svg.attr("height");
-        const bar_width = bar.attr("width");
-        const bar_height = bar.attr("height");
-        const margin = { top: 20, right: 20, bottom: 20, left:20};
+        const bar_width = bar_svg.attr("width");
+        const bar_height = bar_svg.attr("height");
+        const margin = {
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 20
+        };
         const mapWidth = width - margin.left - margin.right;
         const mapHeight = height - margin.top - margin.bottom;
         const map = svg.append("g")
-                        .attr("transform","translate("+margin.left+","+margin.top+")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        const bar = bar_svg.append("g")
 
+        const requestData = async function () {
+            
+            const stateID = await d3.tsv("/us-state-names.tsv");
+            // console.log(stateID);
+            const us = await d3.json("/us.json");
+            // console.log(us);
+            var states = topojson.feature(us, us.objects.states);
+            var stateMesh = topojson.mesh(us, us.objects.states);
+            var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
+            var path = d3.geoPath().projection(projection)
+            // console.log(states)
+            map.selectAll("path").data(states.features)
+                .join("path")
+                .attr("note", d => d.id)
+                .attr("class", "state")
+                .attr("d", path)
 
+            map.append("path").datum(stateMesh)
+                .attr("class", "outline")
+                .attr("d", path)
 
-        const requestData = async function (year) {
-          const stateID = await d3.tsv("/us-state-names.tsv");
-          console.log(stateID);
-          const us = await d3.json("/us.json");
-          // console.log(us);
-          var states = topojson.feature(us, us.objects.states);
-          var stateMesh = topojson.mesh(us, us.objects.states);
-          var projection = d3.geoAlbersUsa().fitSize([mapWidth,mapHeight], states);
-          var path = d3.geoPath().projection(projection)
-          // console.log(states)
-          map.selectAll("path").data(states.features)
-                               .join("path")
-                               .attr("note", d=>d.id)
-                               .attr("class","state")
-                               .attr("d",path)
+            // console.log(shortcutToState);
+            var data = await d3.csv("/honeyproduction.csv");
 
-
-          map.append("path").datum(stateMesh)
-                            .attr("class","outline")
-                            .attr("d",path)
-
-          // console.log(stateID);
-          let counts = {};
-          let shortcutToState = {};
-          //for bar chart
-
-
-          stateID.forEach( d => {
-            counts[d.name] = 0;
-            shortcutToState[d.code] = d.name;
-            shortcutToState[d.id] = d.name;
-          });
-          // console.log(shortcutToState);
-          var data = await d3.csv("/honeyproduction.csv");
-          // console.log(data);
-          data.forEach(d => {
-            if (d.year == year) {
-                counts[shortcutToState[d.state]] = Number(d.totalprod);
-            }
-          })
-          console.log(data);
-
-
-
-          let nonZone = d3.values(counts).filter(d => d>0)
-          let domainRange = d3.extent(nonZone)
-          // console.log(domainRange);
-
-          const colorScale = d3.scaleLinear()
-                               .domain(domainRange)
-                               .range(["#A09DF1","#232159"])///////////////////need to be changed!!!!!!!!!
-          map.selectAll(".state").style("fill", d=> {
-            let value = counts[ shortcutToState[d.id] ];
-            if (value > 0){
-              return colorScale(value)
-            }
-          })
-          // console.log(d3.extent(d3.values(counts)));
-
-          d3.select("#slider").on("input", function() {
-            let sld = d3.select(this);
-            num = sld.property("value");
-
-            requestData(num);
-
-          })
-
-
-          // Following Patr is for mouseover
-          let tooltip = map.append("g")
-                         .attr("class","tooltip")
-                         .attr("visibility","hidden");
-
-          tooltip.append("rect")
-                 .attr("fill", "black")
-                 .attr("opacity", 0.9)
-                 .attr("width",120)
-                 .attr("height",45)
-
-         let txt = tooltip.append("text")
-                              .attr("fill", "white")
-                              .attr("text-anchor","middle")
-                              .attr("alignment-baseline","hanging")
-                              .attr("x", 120 / 2.0)
-                              .attr("y", 8);
-        let txt2 = tooltip.append("text")
-                             .attr("fill", "white")
-                             .attr("text-anchor","middle")
-                             .attr("alignment-baseline","hanging")
-                             .attr("x", 120 / 2.0)
-                             .attr("y", 26);
-
-          d3.selectAll(".state")
-            .on("mouseenter", function() {
-              tooltip.style("visibility","visible")
-              let target = d3.select(this);
-              target.attr("stroke", "white")
-                   .attr("stroke-width", 3) //////////////// does not work here!!!!!!!!!!!!!!
-              txt.text(shortcutToState[target.datum().id]);
-              txt2.text(counts[shortcutToState[target.datum().id]]);
-
-              let boundaries = path.bounds(target.datum());
-              let x = (boundaries[0][0]+boundaries[1][0])/2.0 - 60;
-              let y = boundaries[1][1];
-
-
-
-              tooltip.attr("transform","translate("+x+","+y+")");
-            })
-            .on("mouseout", function() {
-                tooltip.style("visibility","hidden")
-                txt.text("")
-                txt2.text("")
+            
+            d3.select("#slider").on("input", function () {
+                let sld = d3.select(this);
+                num = sld.property("value");
+                
+                // d3.selectAll('#bar_svg bar').remove();
+                update(num);
             })
 
-            //bar chars : totalproduction and stock
+            
+            update(1998);
 
-            const xScaleProd = d3.scaleLinear()
-                             .range([bar_width/2, 0])
-                             .domain([0, d3.max(Object.values(counts))]);
-            const yScale = d3.scaleBand()
-                             .rangeRound([bar_height - 20, 0])
-                             .domain(Object.keys(counts))
-                             .padding(0.1);
-            let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
-            let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
-              if(d === "Virgin Islands of the United States"){
-                return "Virgin Islands";
-              }else {
-                return d;
-              }
-            })
+            function update(year) {
+                d3.select(".priceLB").remove();
+                // console.log(stateID);
+                let counts = {};
+                let shortcutToState = {};
+                //for bar chart
 
-            bar.append("g")
-               .attr("transform","translate(150," + (bar_height - 20) + ")")
-               .call(xAxisProd);
+                stateID.forEach(d => {
+                    counts[d.name] = 0;
+                    shortcutToState[d.code] = d.name;
+                    shortcutToState[d.id] = d.name;
+                });
 
-            bar.append("g")
-               .attr("transform","translate(150,0)")
-               .call(yAxis);
-
-
-
-           let totalprod_data = [];
-           let stock_data = [];
-           for(let [state, amount] of Object.entries(counts)){
-             totalprod_data.push({"state" : state,
-                                  "amount": amount});
-           };
-           data.forEach(d => {
-             if (d.year == year) {
-                 stock_data.push({"state" : shortcutToState[d.state],
-                                  "stock" : Number(d.stocks)
-                 })
-             }
-           })
-           console.log(stock_data);
-           bar.selectAll("totalprod_Rect")
-              .data(totalprod_data)
-              .enter()
-              .append("rect")
-              .attr("x", function(d) { return xScaleProd(d.amount); })
-              .attr("y", function(d) { return yScale(d.state); })
-              .attr("width", function(d) { return bar_width/2 - xScaleProd(d.amount); })
-              .attr("height", yScale.bandwidth() )
-              .attr("fill", "#69b3a2")
-              .attr("transform","translate(150,0)");
-            bar.selectAll("totalprod_Rect")
-               .data(stock_data)
-               .enter()
-               .append("rect")
-               .attr("x", function(d) { return xScaleProd(d.stock); })
-               .attr("y", function(d) { return yScale(d.state); })
-               .attr("width", function(d) { return bar_width/2 - xScaleProd(d.stock); })
-               .attr("height", yScale.bandwidth() )
-               .attr("fill", "#de6831")
-               .attr("transform","translate(150,0)");
-
-
-
-          // bar chatr : priceperlb
-          let priceperlb_data = [];
-          data.forEach(d => {
-            if (d.year == year) {
-                priceperlb_data.push({"state" : shortcutToState[d.state],
-                                 "price" : Number(d.priceperlb)
+                // console.log(data);
+                data.forEach(d => {
+                    if (d.year == year) {
+                        counts[shortcutToState[d.state]] = Number(d.totalprod);
+                    }
                 })
+                console.log(counts);
+
+                let nonZone = d3.values(counts).filter(d => d > 0)
+                let domainRange = d3.extent(nonZone)
+                // console.log(domainRange);
+
+                const colorScale = d3.scaleLinear()
+                    .domain(domainRange)
+                    .range(["#A09DF1", "#232159"]) ///////////////////need to be changed!!!!!!!!!
+                map.selectAll(".state").style("fill", d => {
+                    let value = counts[shortcutToState[d.id]];
+                    if (value > 0) {
+                        return colorScale(value)
+                    }
+                })
+                // console.log(d3.extent(d3.values(counts)));
+
+                // Following Patr is for mouseover
+                let tooltip = map.append("g")
+                    .attr("class", "tooltip")
+                    .attr("visibility", "hidden");
+
+                tooltip.append("rect")
+                    .attr("fill", "black")
+                    .attr("opacity", 0.9)
+                    .attr("width", 120)
+                    .attr("height", 45)
+
+                let txt = tooltip.append("text")
+                    .attr("fill", "white")
+                    .attr("text-anchor", "middle")
+                    .attr("alignment-baseline", "hanging")
+                    .attr("x", 120 / 2.0)
+                    .attr("y", 8);
+                let txt2 = tooltip.append("text")
+                    .attr("fill", "white")
+                    .attr("text-anchor", "middle")
+                    .attr("alignment-baseline", "hanging")
+                    .attr("x", 120 / 2.0)
+                    .attr("y", 26);
+
+                d3.selectAll(".state")
+                    .on("mouseenter", function () {
+                        tooltip.style("visibility", "visible")
+                        let target = d3.select(this);
+                        target.attr("stroke", "white")
+                            .attr("stroke-width", 3) //////////////// does not work here!!!!!!!!!!!!!!
+                        txt.text(shortcutToState[target.datum().id]);
+                        txt2.text(counts[shortcutToState[target.datum().id]]);
+
+                        let boundaries = path.bounds(target.datum());
+                        let x = (boundaries[0][0] + boundaries[1][0]) / 2.0 - 60;
+                        let y = boundaries[1][1];
+
+                        tooltip.attr("transform", "translate(" + x + "," + y + ")");
+                    })
+                    .on("mouseout", function () {
+                        tooltip.style("visibility", "hidden")
+                        txt.text("")
+                        txt2.text("")
+                    })
+
+                //bar chars : totalproduction and stock
+
+                const xScaleProd = d3.scaleLinear()
+                    .range([bar_width / 2, 0])
+                    .domain([0, d3.max(Object.values(counts))]);
+                const yScale = d3.scaleBand()
+                    .rangeRound([bar_height - 20, 0])
+                    .domain(Object.keys(counts))
+                    .padding(0.1);
+                let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
+                let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
+                    if (d === "Virgin Islands of the United States") {
+                        return "Virgin Islands";
+                    } else {
+                        return d;
+                    }
+                })
+
+                // Remove Before Draw Again
+                bar.selectAll(".xAxisProd").remove();
+                bar.append("g")
+                    .attr("class", "xAxisProd")
+                    .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .call(xAxisProd);
+
+                bar.selectAll(".yAxis").remove();
+                bar.append("g")
+                    .attr("class", "yAxis")
+                    .attr("transform", "translate(150,0)")
+                    .call(yAxis);
+
+                let totalprod_data = [];
+                let stock_data = [];
+                for (let [state, amount] of Object.entries(counts)) {
+                    totalprod_data.push({
+                        "state": state,
+                        "amount": amount
+                    });
+                };
+                console.log("total:", totalprod_data)
+                data.forEach(d => {
+                    if (d.year == year) {
+                        stock_data.push({
+                            "state": shortcutToState[d.state],
+                            "stock": Number(d.stocks)
+                        })
+                    }
+                })
+                // console.log(stock_data);
+                bar.selectAll(".totalProdAmount").remove();
+                bar.selectAll("totalprod_Rect")
+                    .attr("class", "totalProdAmount")
+                    .data(totalprod_data)
+                    .enter()
+                    .append("rect")
+                    .attr("x", function (d) {
+                        return xScaleProd(d.amount);
+                    })
+                    .attr("y", function (d) {
+                        return yScale(d.state);
+                    })
+                    .attr("width", function (d) {
+                        return bar_width / 2 - xScaleProd(d.amount);
+                    })
+                    .attr("height", yScale.bandwidth())
+                    .attr("fill", "#69b3a2")
+                    .attr("transform", "translate(150,0)");
+
+
+                bar.selectAll(".totalProdStock").remove();
+                bar.selectAll("totalprod_Rect")
+                    .attr("class", "totalProdStock")
+                    .data(stock_data)
+                    .enter()
+                    .append("rect")
+                    .attr("x", function (d) {
+                        return xScaleProd(d.stock);
+                    })
+                    .attr("y", function (d) {
+                        return yScale(d.state);
+                    })
+                    .attr("width", function (d) {
+                        return bar_width / 2 - xScaleProd(d.stock);
+                    })
+                    .attr("height", yScale.bandwidth())
+                    .attr("fill", "#de6831")
+                    .attr("transform", "translate(150,0)");
+
+                // bar chatr : priceperlb
+                let priceperlb_data = [];
+                data.forEach(d => {
+                    if (d.year == year) {
+                        priceperlb_data.push({
+                            "state": shortcutToState[d.state],
+                            "price": Number(d.priceperlb)
+                        })
+                    }
+                })
+
+                const xScalePricePerlb = d3.scaleLinear()
+                    .range([bar_width / 2, bar_width])
+                    .domain([d3.min(priceperlb_data, function (d) {
+                            return d.price;
+                        }) - 0.1,
+                        d3.max(priceperlb_data, function (d) {
+                            return d.price;
+                        })
+                    ]);
+                let xAxisPricePerlb = d3.axisBottom(xScalePricePerlb);
+                // ------------------------------------Here it is-----------------------//
+                bar.selectAll(".xAxisPrice").remove();
+                bar.append("g")
+                    .attr("class", "xAxisPrice")
+                    .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .call(xAxisPricePerlb);
+                
+                
+                bar.selectAll("priceperlb_Rect")
+                    .append("g")
+                    .attr("class", "priceLB")
+                    .data(priceperlb_data)
+                    .enter()
+                    .append("rect")
+                    .attr("x", function (d) {
+                        return bar_width / 2;
+                    })
+                    .attr("y", function (d) {
+                        return yScale(d.state);
+                    })
+                    .attr("width", function (d) {
+                        return xScalePricePerlb(d.price) - bar_width / 2;
+                    })
+                    .attr("height", yScale.bandwidth())
+                    .attr("fill", "#f0b841")
+                    .attr("transform", "translate(150,0)");
+
+
+                bar.selectAll(".tick line").attr("stroke", "lightgrey")
+                    .attr("stroke-dasharray", "2,2");
+                bar.selectAll(".domain").attr("display", "none");
             }
-          })
-
-          const xScalePricePerlb = d3.scaleLinear()
-                           .range([bar_width/2, bar_width])
-                           .domain([d3.min(priceperlb_data, function(d){return d.price;}) - 0.1,
-                                    d3.max(priceperlb_data, function(d){return d.price;})
-                         ]);
-          let xAxisPricePerlb = d3.axisBottom(xScalePricePerlb);
-          bar.append("g")
-             .attr("transform","translate(150," + (bar_height - 20) + ")")
-             .call(xAxisPricePerlb);
-         bar.selectAll("priceperlb_Rect")
-            .data(priceperlb_data)
-            .enter()
-            .append("rect")
-            .attr("x", function(d) { return bar_width/2; })
-            .attr("y", function(d) { return yScale(d.state); })
-            .attr("width", function(d) {
-              return xScalePricePerlb(d.price) - bar_width/2; })
-            .attr("height", yScale.bandwidth() )
-            .attr("fill", "#f0b841")
-            .attr("transform","translate(150,0)");
-
-
-        bar.selectAll(".tick line").attr("stroke", "lightgrey")
-                                    .attr("stroke-dasharray", "2,2");
-        bar.selectAll(".domain").attr("display", "none");
         };
-        requestData(1998);
-      </script>
-      <input type="range" id="slider" min="1998" max="2012" step="1" value="1998" >
+        requestData();
+    </script>
+    <!-- // 2012 -->
+    <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
 
 
 
 
-  </body>
+</body>
+
 </html>
