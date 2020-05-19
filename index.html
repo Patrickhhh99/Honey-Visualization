@@ -102,6 +102,7 @@
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
                 let counts = {};
+                let nonZereCount = {};
                 let shortcutToState = {};
                 //for bar chart
 
@@ -111,13 +112,16 @@
                     shortcutToState[d.id] = d.name;
                 });
 
-                // console.log(data);
+                console.log(data);
                 data.forEach(d => {
                     if (d.year == year) {
                         counts[shortcutToState[d.state]] = Number(d.totalprod);
+                        if (Number(d.totalprod) > 0 ) {
+                          nonZereCount[shortcutToState[d.state]] = Number(d.totalprod);
+                        }
                     }
                 })
-                console.log(counts);
+                console.log(nonZereCount);
 
                 let nonZero = d3.values(counts).filter(d => d > 0)
                 let domainRange = d3.extent(nonZero)
@@ -186,15 +190,17 @@
                   const xScaleProd = d3.scaleLinear()
                     .domain([0, maxTotalProd])
                     .range([chartWidth / 2, 0])
-                   
+
 
                   const yScale = d3.scaleBand()
                     .rangeRound([chartHeight - 20, 0])
-                    .domain(Object.keys(counts))
+                    .domain(Object.keys(nonZereCount))
                     .padding(0.1);
-  
-                let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
-                let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
+
+                let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"))
+
+                // console.log(Object.keys(counts));
+                let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(nonZereCount)).tickFormat(d => {
                     if (d === "Virgin Islands of the United States") {
                         return "Virgin Islands";
                     } else {
@@ -208,7 +214,7 @@
 
                 chart.append("g")
                     .attr("class", "xAxisProd")
-                    // .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .attr("transform", "translate(" + 0 + ","+ chartHeight +")")
                     .call(xAxisProd);
 
                 chart.selectAll(".yAxis").remove();
@@ -303,7 +309,8 @@
                 chart.selectAll(".xAxisPrice").remove();
                 chart.append("g")
                     .attr("class", "xAxisPrice")
-                    // .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .attr("transform", "translate(" + 0 + ","+ chartHeight +")")
+                
                     .call(xAxisPricePerlb);
 
 
