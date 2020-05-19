@@ -34,7 +34,8 @@
   </div>
     <div style="display:inline-block; width:450px;  vertical-align: top; margin: 10px 20px 0px 20px">
       <p style="font-size:1.3em ;font-family: sans-serif; color:white; line-height:1.45em">
-        In 2006, global concern was raised over the
+        In
+        <span style="color:#992c02">2006</span>, global concern was raised over the
         <span style="color:#992c02; font-size:1.35em"><b>rapid decline</b></span> in the honeybee population, an integral component to American honey agriculture. Large numbers of hives were lost to
         <span style="color:#bd3702">Colony Collapse Disorder</span>, a phenomenon of disappearing worker bees causing the remaining hive colony to collapse.<br>
          Twelve years later, some industries are observing recovery but the American honey industry is still
@@ -53,7 +54,8 @@
       </div>
       <div class="col2" style = "display:inline-block">
         <div class="row1" style = "margin-left:100px" >
-          <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
+          <span style="position:absolute; margin-right: 20px; margin-bottom:5px; font-family: sans-serif; color:white">Change year here</span>
+          <input style="margin-left: 140px" type="range" id="slider" min="1998" max="2012" step="1" value="1998">
         </div>
         <div class="row2">
           <svg id="svg" height="600" width="700" style="margin:20px 50px 20px 20px"></svg>
@@ -93,12 +95,13 @@
         const chart = bar_svg.append("g")
                              .attr("class","left")
                              .attr("transform", "translate(" + (marginBar.left - 50 )+ "," + marginBar.top + ")");
+
        svg.append("text")
           .attr("x", 0)
           .attr("y", 570)
           .text("total product value")
-          .attr("fill", "grey")
-          .style("font-size", "14px");
+          .attr("fill", "white")
+          .style("font-size", "16px");
         const requestData = async function () {
 
             const stateID = await d3.tsv("/us-state-names.tsv");
@@ -137,6 +140,22 @@
             update(1998);
 
             function update(year) {
+              d3.select("#curyear").remove();
+              d3.select(".row1")
+                  .append("span")
+                  .attr("id", "curyear")
+                  .style("color", function(){
+                    if(Number(year) >= 2006){
+                      return "#bd3702";
+                    }
+                    else{
+                      return "white";
+                    }
+                  })
+                  .style("font-family", "sans-serif")
+                  .style("position", "absolute")
+                  .style("margin-left", "20px")
+                  .text(year);
 
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
@@ -232,7 +251,7 @@
                         .data(legendDomain)
                         .enter().append("g")
                         .attr("class", "legend")
-                        .attr("transform", "translate(110," + 550 + ")");
+                        .attr("transform", "translate(125," + 550 + ")");
 
                     legend.append("rect")
                         .attr("x", function(d, i){ return i*legendWidth ;})
@@ -432,7 +451,7 @@
                      })
                   .attr("y", 15)
                   .text(function(d, i){ return bar_legendLabels[i]; })
-                  .attr("fill", "grey")
+                  .attr("fill", "white")
                   .style("font-size", "14px");
             }
         };
