@@ -421,6 +421,7 @@
                 // bar legend
                 let bar_legendDomain = ["#69b3a2", "#de6831", "#f0b841"];
                 let bar_legendLabels = ["total production", "stocks left", "price per lb"]
+                let bar_legend_offset = [-40, -10, -16];
                 var bar_legend = chart.selectAll("g.bar_legend")
                     .data(bar_legendDomain)
                     .enter().append("g")
@@ -435,11 +436,7 @@
 
                 bar_legend.append("text")
                   .attr("x", function(d, i){
-                    if(i === 0){
-                      return i* 2 * legendWidth - legendWidth - 20;
-                    }else {
-                      return i* 2 * legendWidth - legendWidth;
-                    }
+                      return i* 2 * legendWidth - legendWidth + bar_legend_offset[i];
                      })
                   .attr("y", 15)
                   .text(function(d, i){ return bar_legendLabels[i]; })
