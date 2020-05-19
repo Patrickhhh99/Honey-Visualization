@@ -9,7 +9,7 @@
     <style>
         .state {
             fill: #EAE6E5;
-            stroke: none;
+            /* stroke: none; */
         }
 
         .outline {
@@ -267,6 +267,9 @@
                         tooltip.attr("transform", "translate(" + x + "," + y + ")");
                     })
                     .on("mouseout", function () {
+                        let target = d3.select(this);
+                        target.attr("stroke", "white")
+                            .attr("stroke-width", 1)
                         tooltip.style("visibility", "hidden")
                         txt.text("")
                         txt2.text("")
@@ -471,9 +474,9 @@
                     .attr("class", "bar_legend")
                     .attr("transform", "translate(100," + 580 + ")");
                 bar_legend.append("rect")
-                    .attr("x", function(d, i){ return i*2 * legendWidth ;})
+                    .attr("x", function(d, i){ return i*2 * legendWidth + 14;})
                     .attr("y", 5)
-                    .attr("width", 30)
+                    .attr("width", 20)
                     .attr("height", 20)
                     .style("fill", function(d, i) { return bar_legendDomain[i]; });
 
