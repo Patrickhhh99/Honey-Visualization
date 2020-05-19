@@ -129,7 +129,7 @@
        svg.append("text")
           .attr("x", 0)
           .attr("y", 565)
-          .text("total product value")
+          .text("yield per colony")
           .attr("fill", "white")
           .style("font-size", "16px");
         const requestData = async function () {
@@ -155,7 +155,7 @@
 
             // console.log(shortcutToState);
             var data = await d3.csv("/honeyproduction.csv");
-            console.log(data)
+            // console.log(data)
 
 
             d3.select("#slider").on("input", function () {
@@ -191,7 +191,7 @@
                     shortcutToState[d.id] = d.name;
                 });
 
-                console.log(data);
+                // console.log(data);
                 data.forEach(d => {
                     if (d.year == year) {
                         counts[shortcutToState[d.state]] = Number(d.totalprod);
@@ -200,9 +200,19 @@
                         }
                     }
                 })
-                console.log(nonZereCount);
+                let yieldamount = [];
+                let nonZereyield = [];
+                data.forEach(d => {
+                    if (d.year == year) {
+                        yieldamount[shortcutToState[d.state]] = Number(d.yieldpercol);
+                        if (Number(d.totalprod) > 0 ) {
+                          nonZereyield[shortcutToState[d.state]] = Number(d.yieldpercol);
+                        }
+                    }
+                })
+                // console.log(nonZereyield);
 
-                let nonZero = d3.values(counts).filter(d => d > 0)
+                let nonZero = d3.values(yieldamount).filter(d => d > 0)
                 let domainRange = d3.extent(nonZero)
                 // console.log(domainRange);
 
@@ -210,7 +220,7 @@
                     .domain(domainRange)
                     .range(["#f7dc9c", "#ff7700"]) ///////////////////need to be changed!!!!!!!!!
                 map.selectAll(".state").style("fill", d => {
-                    let value = counts[shortcutToState[d.id]];
+                    let value = yieldamount[shortcutToState[d.id]];
                     if (value > 0) {
                         return colorScale(value)
                     }
@@ -248,7 +258,7 @@
                         target.attr("stroke", "white")
                             .attr("stroke-width", 3) //////////////// does not work here!!!!!!!!!!!!!!
                         txt.text(shortcutToState[target.datum().id]);
-                        txt2.text(counts[shortcutToState[target.datum().id]]);
+                        txt2.text(yieldamount[shortcutToState[target.datum().id]]);
 
                         let boundaries = path.bounds(target.datum());
                         let x = (boundaries[0][0] + boundaries[1][0]) / 2.0 - 60;
