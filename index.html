@@ -28,7 +28,7 @@
 
         #slider {
           -webkit-appearance: none;
-          width: 100%;
+          width: 250px;
           height: 5px;
           background: #d3d3d3;
           outline: none;
@@ -40,15 +40,17 @@
           -webkit-appearance: none;
           appearance: none;
           width: 25px;
-          height: 28px;
+          height: 30px;
           border: 0;
-          background: url('bee.png');
+          color: #2d3a47;
+          background: url('cute_bee.png');
           cursor: pointer;
         }
 
         #slider::-moz-range-thumb {
-          width: 23px;
-          height: 25px;
+          appearance: none;
+          width: 25px;
+          height: 30px;
           border: 0;
           cursor: pointer;
         }
@@ -82,7 +84,8 @@
         <svg id="bar_svg" height="600" width="600" style="margin:0px 0px 20px 0px"></svg>
       </div>
       <div class="col2" style = "display:inline-block">
-        <div class="slidecontainer" style = "margin-left:100px" width = 100%>
+        <div class="slidecontainer" style = "margin-left:100px; position:inline-block" width = 100px>
+          <span style = "margin-right:50px; font-family: sans-serif; color:white;">Change year here: </span>
           <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
         </div>
         <div class="row2">
@@ -175,7 +178,7 @@
                    .attr("y",40)
                    .attr("fill","#f7dc9c")
                    .attr("font-size",70)
-              
+
                 // console.log(stateID);
                 let counts = {};
                 let nonZereCount = {};
