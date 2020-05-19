@@ -25,9 +25,43 @@
     </style>
 </head>
 
-<body>
-    <svg id="bar_svg" height="700" width="500"></svg>
-    <svg id="svg" height="700" width="700"></svg>
+<body style="background-color:#2d3a47">
+  <div class="heading" style="margin-bottom: 0px;">
+    <div class="title" style="display:inline-block " width = "450px" height = "400px">
+      <h1 style="font-size: 4em; margin: 20px;  font-family: sans-serif; color:#fa7602" >Honey Production <br>in the USA</h1>
+      <h2 style="font-size: 2em; margin: 0px 20px; color:grey; font-family: cursive">From 1998 to 2012</h2>
+    </div>
+  </div>
+    <div style="display:inline-block; width:450px;  vertical-align: top; margin: 10px 20px 0px 20px">
+      <p style="font-size:1.3em ;font-family: sans-serif; color:white; line-height:1.45em">
+        In 2006, global concern was raised over the
+        <span style="color:#992c02; font-size:1.35em"><b>rapid decline</b></span> in the honeybee population, an integral component to American honey agriculture. Large numbers of hives were lost to
+        <span style="color:#bd3702">Colony Collapse Disorder</span>, a phenomenon of disappearing worker bees causing the remaining hive colony to collapse.<br>
+         Twelve years later, some industries are observing recovery but the American honey industry is still
+         <span style="color:#bd3702">largely struggling</span>.
+      </p>
+    </div>
+    <div style="display:inline-block; width:450px; vertical-align: top; margin: 10px 20px 0px 50px">
+    <p style="font-size:1.2em ;display:inline-block; font-family: sans-serif;color: grey;line-height:1.4em">
+      The National Agricultural Statistics Service (NASS) is the primary data reporting body for the US Department of Agriculture (USDA). This dataset from NASS provides insight into honey production supply and demand in America by state from 1998 to 2012.</p>
+    </div>
+
+
+    <div class="svgs">
+      <div class="col1" style = "display:inline-block">
+        <svg id="bar_svg" height="600" width="700" style="margin:0px 0px 20px 0px"></svg>
+      </div>
+      <div class="col2" style = "display:inline-block">
+        <div class="row1" style = "margin-left:100px" >
+          <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
+        </div>
+        <div class="row2">
+          <svg id="svg" height="600" width="700" style="margin:20px 50px 20px 20px"></svg>
+        </div>
+
+      </div>
+
+    </div>
 
     <script>
         /*jshint esversion: 8 */
@@ -43,12 +77,22 @@
             bottom: 20,
             left: 20
         };
+        const marginBar = {
+            top: 0,
+            right: 10,
+            bottom: 30,
+            left: 150
+        };
+        const chartWidth = width - marginBar.left - marginBar.right;
+        const chartHeight = height - marginBar.top - marginBar.bottom;
         const mapWidth = width - margin.left - margin.right;
         const mapHeight = height - margin.top - margin.bottom;
+
         const map = svg.append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        const bar = bar_svg.append("g")
+        const chart = bar_svg.append("g")
+                             .attr("class","left")
+                             .attr("transform", "translate(" + (marginBar.left - 50 )+ "," + marginBar.top + ")");
 
         const requestData = async function () {
 
@@ -73,6 +117,7 @@
 
             // console.log(shortcutToState);
             var data = await d3.csv("/honeyproduction.csv");
+            console.log(data)
 
 
             d3.select("#slider").on("input", function () {
@@ -91,6 +136,7 @@
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
                 let counts = {};
+                let nonZereCount = {};
                 let shortcutToState = {};
                 //for bar chart
 
@@ -100,13 +146,16 @@
                     shortcutToState[d.id] = d.name;
                 });
 
-                // console.log(data);
+                console.log(data);
                 data.forEach(d => {
                     if (d.year == year) {
                         counts[shortcutToState[d.state]] = Number(d.totalprod);
+                        if (Number(d.totalprod) > 0 ) {
+                          nonZereCount[shortcutToState[d.state]] = Number(d.totalprod);
+                        }
                     }
                 })
-                console.log(counts);
+                console.log(nonZereCount);
 
                 let nonZero = d3.values(counts).filter(d => d > 0)
                 let domainRange = d3.extent(nonZero)
@@ -114,7 +163,7 @@
 
                 const colorScale = d3.scaleLinear()
                     .domain(domainRange)
-                    .range(["#A09DF1", "#232159"]) ///////////////////need to be changed!!!!!!!!!
+                    .range(["#f7dc9c", "#ff7700"]) ///////////////////need to be changed!!!!!!!!!
                 map.selectAll(".state").style("fill", d => {
                     let value = counts[shortcutToState[d.id]];
                     if (value > 0) {
@@ -167,41 +216,70 @@
                         txt.text("")
                         txt2.text("")
                     })
+                    // map legend
+                    let range = domainRange[1] - domainRange[0];
+                    let legendDomain = ["white",colorScale(domainRange[0]), colorScale(domainRange[0] + range / 5),colorScale(domainRange[0] + range * 2 / 5), colorScale(domainRange[0]  + range * 3 / 5), colorScale(domainRange[0] + range * 4 / 5), colorScale(domainRange[1])]
+                    let legendLabels = ["NaN",domainRange[0], domainRange[0] + range / 5, domainRange[0] + range * 2 / 5, domainRange[0] + range * 3 / 5, domainRange[0] + range * 4 / 5, domainRange[1]]
+                    // console.log(legandDomain);
+                    let legendWidth = 70;
+                    let legendHeight = 20;
+                    var legend = svg.selectAll("g.legend")
+                        .data(legendDomain)
+                        .enter().append("g")
+                        .attr("class", "legend")
+                        .attr("transform", "translate(100," + 550 + ")");
+
+                    legend.append("rect")
+                        .attr("x", function(d, i){ return i*legendWidth ;})
+                        .attr("y", 5)
+                        .attr("width", legendWidth)
+                        .attr("height", legendHeight)
+                        .style("fill", function(d, i) { return legendDomain[i]; });
+
+                      legend.append("text")
+                      .attr("x", function(d, i){ return i* legendWidth; })
+                      .attr("y", 0)
+                      .text(function(d, i){ return legendLabels[i]; })
+                      .attr("fill", "grey")
+                      .style("font-size", "14px");
 
                 //bar chars : totalproduction and stock
 
-
+                  let maxTotalProd = d3.max(data,d => Number(d.totalprod))
+                  console.log(maxTotalProd)
                   const xScaleProd = d3.scaleLinear()
-                    .range([bar_width / 2, 0])
-                    .domain([0, d3.max(Object.values(counts))]);
+                    .domain([0, maxTotalProd])
+                    .range([chartWidth / 2, 0])
+
+
                   const yScale = d3.scaleBand()
-                    .rangeRound([bar_height - 20, 0])
-                    .domain(Object.keys(counts))
+                    .rangeRound([chartHeight - 20, 0])
+                    .domain(Object.keys(nonZereCount))
                     .padding(0.1);
+
                 let xAxisProd = d3.axisBottom(xScaleProd).tickFormat(d3.format(".2s"));
-                let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(counts)).tickFormat(d => {
-                    if (d === "Virgin Islands of the United States") {
-                        return "Virgin Islands";
-                    } else {
-                        return d;
-                    }
-                })
+
+                // console.log(Object.keys(counts));
+                let yAxis = d3.axisLeft(yScale).tickValues(Object.keys(nonZereCount)).tickFormat(d => d);
 
 
                 // Remove Before Draw Again
-                bar.selectAll(".xAxisProd").remove();
+                chart.selectAll(".xAxisProd").remove();
 
-                bar.append("g")
+                chart.append("g")
                     .attr("class", "xAxisProd")
-                    .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .attr("transform", "translate(" + 0 + ","+ (chartHeight - 15) +")")
                     .call(xAxisProd);
+                chart.selectAll(".xAxisProd text")
+                     .attr("fill", "white");
 
-                bar.selectAll(".yAxis").remove();
-                bar.append("g")
+                chart.selectAll(".yAxis").remove();
+                chart.append("g")
                     .attr("class", "yAxis")
-                    .attr("transform", "translate(150,0)")
                     .call(yAxis);
-
+                chart.selectAll(".yAxis text")
+                     .attr("fill", "white")
+                     .attr("font-family", "cursive");
                 let totalprod_data = [];
                 let stock_data = [];
                 for (let [state, amount] of Object.entries(counts)) {
@@ -220,7 +298,7 @@
                     }
                 })
                 // console.log(stock_data);
-                bar.selectAll("rect.totalProdAmount")
+                chart.selectAll("rect.totalProdAmount")
                     .data(totalprod_data)
                     .join("rect")
                     .attr("class", "totalProdAmount")
@@ -228,10 +306,12 @@
                     .duration(500)
                     .delay((d, i) => i * 20)
                     .attr("x", function (d) {
-                        return xScaleProd(d.amount);
+                        // return chartWidth / 2;
+                        return xScaleProd(Number(d.amount));
                     })
                     .attr("width", function (d) {
-                        return bar_width / 2 - xScaleProd(d.amount);
+                        return chartWidth / 2 - xScaleProd(d.amount);
+                        // return 10;
                     })
                     .transition()
                     .attr("y", function (d) {
@@ -239,11 +319,11 @@
                     })
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#69b3a2")
-                    .attr("transform", "translate(150,0)");
+                    // .attr("transform", "translate(150,0)");
 
 
                 // bar.selectAll(".totalProdStock").remove();
-                bar.selectAll("rect.totalProdStock")
+                chart.selectAll("rect.totalProdStock")
                     .data(stock_data)
                     .join("rect")
                     .attr("class", "totalProdStock")
@@ -254,7 +334,8 @@
                         return xScaleProd(d.stock);
                     })
                     .attr("width", function (d) {
-                        return bar_width / 2 - xScaleProd(d.stock);
+                        return chartWidth / 2 - xScaleProd(d.stock);
+                        // return 1
                     })
                     .transition()
                     .attr("y", function (d) {
@@ -263,7 +344,7 @@
 
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#de6831")
-                    .attr("transform", "translate(150,0)");
+                    // .attr("transform", "translate(150,0)");
 
                 // bar chatr : priceperlb
                 let priceperlb_data = [];
@@ -278,25 +359,21 @@
 
 
                   const xScalePricePerlb = d3.scaleLinear()
-                    .range([bar_width / 2, bar_width])
-                    .domain([d3.min(priceperlb_data, function (d) {
-                            return d.price;
-                        }) - 0.2,
-                        d3.max(priceperlb_data, function (d) {
-                            return d.price;
-                        })
-                    ]);
+                    .range([chartWidth / 2, chartWidth])
+                    .domain([0, 4.15]);
                 let xAxisPricePerlb = d3.axisBottom(xScalePricePerlb);
                 // ------------------------------------Here it is-----------------------//
-                bar.selectAll(".xAxisPrice").remove();
-                bar.append("g")
+                chart.selectAll(".xAxisPrice").remove();
+                chart.append("g")
                     .attr("class", "xAxisPrice")
-                    .attr("transform", "translate(150," + (bar_height - 20) + ")")
+                    .attr("transform", "translate(" + 0 + ","+ (chartHeight - 15) +")")
+
                     .call(xAxisPricePerlb);
 
+                chart.selectAll(".xAxisPrice text")
+                     .attr("fill", "white");
 
-
-                bar.selectAll("rect.priceLB")
+                chart.selectAll("rect.priceLB")
                     .data(priceperlb_data)
                     .join("rect")
                     .attr("class", "priceLB")
@@ -304,10 +381,10 @@
                     .duration(500)
                     .delay((d, i) => i * 20)
                     .attr("x", function (d) {
-                        return bar_width / 2;
+                        return chartWidth / 2;
                     })
                     .attr("width", function (d) {
-                        return xScalePricePerlb(d.price) - bar_width / 2;
+                        return xScalePricePerlb(d.price) - chartWidth / 2;
                     })
                     .transition()
                     .attr("y", function (d) {
@@ -315,18 +392,46 @@
                     })
                     .attr("height", yScale.bandwidth())
                     .attr("fill", "#f0b841")
-                    .attr("transform", "translate(150,0)");
+                    // .attr("transform", "translate(150,0)");
 
 
-                bar.selectAll(".tick line").attr("stroke", "lightgrey")
+                chart.selectAll(".tick line").attr("stroke", "lightgrey")
                     .attr("stroke-dasharray", "2,2");
-                bar.selectAll(".domain").attr("display", "none");
+                chart.selectAll(".domain").attr("display", "none");
+
+                // bar legend
+                let bar_legendDomain = ["#69b3a2", "#de6831", "#f0b841"];
+                let bar_legendLabels = ["total production", "stocks left", "price per lb"]
+                var bar_legend = chart.selectAll("g.bar_legend")
+                    .data(bar_legendDomain)
+                    .enter().append("g")
+                    .attr("class", "bar_legend")
+                    .attr("transform", "translate(100," + 580 + ")");
+                bar_legend.append("rect")
+                    .attr("x", function(d, i){ return i*2 * legendWidth ;})
+                    .attr("y", 5)
+                    .attr("width", 30)
+                    .attr("height", 20)
+                    .style("fill", function(d, i) { return bar_legendDomain[i]; });
+
+                bar_legend.append("text")
+                  .attr("x", function(d, i){
+                    if(i === 0){
+                      return i* 2 * legendWidth - legendWidth - 20;
+                    }else {
+                      return i* 2 * legendWidth - legendWidth;
+                    }
+                     })
+                  .attr("y", 15)
+                  .text(function(d, i){ return bar_legendLabels[i]; })
+                  .attr("fill", "grey")
+                  .style("font-size", "14px");
             }
         };
         requestData();
     </script>
     <!-- // 2012 -->
-    <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
+
 
 
 
