@@ -49,14 +49,14 @@
 
     <div class="svgs">
       <div class="col1" style = "display:inline-block">
-        <svg id="bar_svg" height="600" width="700" style="margin:0px 0px 20px 0px"></svg>
+        <svg id="bar_svg" height="600" width="600" style="margin:0px 0px 20px 0px"></svg>
       </div>
       <div class="col2" style = "display:inline-block">
         <div class="row1" style = "margin-left:100px" >
           <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
         </div>
         <div class="row2">
-          <svg id="svg" height="600" width="700" style="margin:20px 50px 20px 20px"></svg>
+          <svg id="svg" height="600" width="550" style="margin:20px 50px 20px 20px"></svg>
         </div>
 
       </div>
@@ -93,12 +93,7 @@
         const chart = bar_svg.append("g")
                              .attr("class","left")
                              .attr("transform", "translate(" + (marginBar.left - 50 )+ "," + marginBar.top + ")");
-       svg.append("text")
-          .attr("x", 0)
-          .attr("y", 570)
-          .text("total product value")
-          .attr("fill", "grey")
-          .style("font-size", "14px");
+
         const requestData = async function () {
 
             const stateID = await d3.tsv("/us-state-names.tsv");
@@ -137,7 +132,14 @@
             update(1998);
 
             function update(year) {
-
+                map.selectAll(".yearNum").remove();
+                map.append("text")
+                   .text(year)
+                   .attr("class","yearNum")
+                   .attr("x",30)
+                   .attr("y",40)
+                   .attr("fill","#f7dc9c")
+                   .attr("font-size",70)
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
                 let counts = {};
@@ -232,7 +234,7 @@
                         .data(legendDomain)
                         .enter().append("g")
                         .attr("class", "legend")
-                        .attr("transform", "translate(110," + 550 + ")");
+                        .attr("transform", "translate(100," + 550 + ")");
 
                     legend.append("rect")
                         .attr("x", function(d, i){ return i*legendWidth ;})
@@ -241,15 +243,12 @@
                         .attr("height", legendHeight)
                         .style("fill", function(d, i) { return legendDomain[i]; });
 
-                    legend.append("text")
-                    .attr("x", function(d, i){ return i* legendWidth; })
-                    .attr("y", 0)
-                    .text(function(d, i){ return legendLabels[i]; })
-                    .attr("fill", "grey")
-                    .style("font-size", "14px");
-
-
-
+                      legend.append("text")
+                      .attr("x", function(d, i){ return i* legendWidth; })
+                      .attr("y", 0)
+                      .text(function(d, i){ return legendLabels[i]; })
+                      .attr("fill", "grey")
+                      .style("font-size", "14px");
 
                 //bar chars : totalproduction and stock
 
