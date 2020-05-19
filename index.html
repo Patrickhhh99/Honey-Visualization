@@ -34,8 +34,7 @@
   </div>
     <div style="display:inline-block; width:450px;  vertical-align: top; margin: 10px 20px 0px 20px">
       <p style="font-size:1.3em ;font-family: sans-serif; color:white; line-height:1.45em">
-        In
-        <span style="color:#992c02">2006</span>, global concern was raised over the
+        In 2006, global concern was raised over the
         <span style="color:#992c02; font-size:1.35em"><b>rapid decline</b></span> in the honeybee population, an integral component to American honey agriculture. Large numbers of hives were lost to
         <span style="color:#bd3702">Colony Collapse Disorder</span>, a phenomenon of disappearing worker bees causing the remaining hive colony to collapse.<br>
          Twelve years later, some industries are observing recovery but the American honey industry is still
@@ -50,15 +49,14 @@
 
     <div class="svgs">
       <div class="col1" style = "display:inline-block">
-        <svg id="bar_svg" height="600" width="700" style="margin:0px 0px 20px 0px"></svg>
+        <svg id="bar_svg" height="600" width="600" style="margin:0px 0px 20px 0px"></svg>
       </div>
       <div class="col2" style = "display:inline-block">
         <div class="row1" style = "margin-left:100px" >
-          <span style="position:absolute; margin-right: 20px; margin-bottom:5px; font-family: sans-serif; color:white">Change year here</span>
-          <input style="margin-left: 140px" type="range" id="slider" min="1998" max="2012" step="1" value="1998">
+          <input type="range" id="slider" min="1998" max="2012" step="1" value="1998">
         </div>
         <div class="row2">
-          <svg id="svg" height="600" width="700" style="margin:20px 50px 20px 20px"></svg>
+          <svg id="svg" height="600" width="550" style="margin:20px 50px 20px 20px"></svg>
         </div>
 
       </div>
@@ -95,10 +93,9 @@
         const chart = bar_svg.append("g")
                              .attr("class","left")
                              .attr("transform", "translate(" + (marginBar.left - 50 )+ "," + marginBar.top + ")");
-
        svg.append("text")
           .attr("x", 0)
-          .attr("y", 570)
+          .attr("y", 565)
           .text("total product value")
           .attr("fill", "white")
           .style("font-size", "16px");
@@ -140,23 +137,14 @@
             update(1998);
 
             function update(year) {
-              d3.select("#curyear").remove();
-              d3.select(".row1")
-                  .append("span")
-                  .attr("id", "curyear")
-                  .style("color", function(){
-                    if(Number(year) >= 2006){
-                      return "#bd3702";
-                    }
-                    else{
-                      return "white";
-                    }
-                  })
-                  .style("font-family", "sans-serif")
-                  .style("position", "absolute")
-                  .style("margin-left", "20px")
-                  .text(year);
-
+                map.selectAll(".yearNum").remove();
+                map.append("text")
+                   .text(year)
+                   .attr("class","yearNum")
+                   .attr("x",30)
+                   .attr("y",40)
+                   .attr("fill","#f7dc9c")
+                   .attr("font-size",70)
                 d3.select(".priceLB").remove();
                 // console.log(stateID);
                 let counts = {};
@@ -245,8 +233,8 @@
                     let legendDomain = ["white",colorScale(domainRange[0]), colorScale(domainRange[0] + range / 5),colorScale(domainRange[0] + range * 2 / 5), colorScale(domainRange[0]  + range * 3 / 5), colorScale(domainRange[0] + range * 4 / 5), colorScale(domainRange[1])]
                     let legendLabels = ["NaN",domainRange[0], domainRange[0] + range / 5, domainRange[0] + range * 2 / 5, domainRange[0] + range * 3 / 5, domainRange[0] + range * 4 / 5, domainRange[1]]
                     // console.log(legandDomain);
-                    let legendWidth = 70;
-                    let legendHeight = 20;
+                    let legendWidth = 50;
+                    let legendHeight = 10;
                     var legend = svg.selectAll("g.legend")
                         .data(legendDomain)
                         .enter().append("g")
@@ -260,15 +248,19 @@
                         .attr("height", legendHeight)
                         .style("fill", function(d, i) { return legendDomain[i]; });
 
-                    legend.append("text")
-                    .attr("x", function(d, i){ return i* legendWidth; })
-                    .attr("y", 0)
-                    .text(function(d, i){ return legendLabels[i]; })
-                    .attr("fill", "grey")
-                    .style("font-size", "14px");
-
-
-
+                      legend.append("text")
+                      .attr("x", function(d, i){ return i* legendWidth; })
+                      .attr("y", 0)
+                      .text(function(d, i){
+                        if(legendLabels[i] !== "NaN"){
+                          return d3.format(".2s")(legendLabels[i]);
+                        }
+                        else{
+                          return legendLabels[i];
+                        }
+                         })
+                      .attr("fill", "grey")
+                      .style("font-size", "14px");
 
                 //bar chars : totalproduction and stock
 
@@ -451,7 +443,7 @@
                      })
                   .attr("y", 15)
                   .text(function(d, i){ return bar_legendLabels[i]; })
-                  .attr("fill", "white")
+                  .attr("fill", "grey")
                   .style("font-size", "14px");
             }
         };
