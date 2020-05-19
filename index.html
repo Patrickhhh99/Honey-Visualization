@@ -93,7 +93,12 @@
         const chart = bar_svg.append("g")
                              .attr("class","left")
                              .attr("transform", "translate(" + (marginBar.left - 50 )+ "," + marginBar.top + ")");
-
+       svg.append("text")
+          .attr("x", 0)
+          .attr("y", 570)
+          .text("total product value")
+          .attr("fill", "grey")
+          .style("font-size", "14px");
         const requestData = async function () {
 
             const stateID = await d3.tsv("/us-state-names.tsv");
@@ -227,7 +232,7 @@
                         .data(legendDomain)
                         .enter().append("g")
                         .attr("class", "legend")
-                        .attr("transform", "translate(100," + 550 + ")");
+                        .attr("transform", "translate(110," + 550 + ")");
 
                     legend.append("rect")
                         .attr("x", function(d, i){ return i*legendWidth ;})
@@ -236,12 +241,15 @@
                         .attr("height", legendHeight)
                         .style("fill", function(d, i) { return legendDomain[i]; });
 
-                      legend.append("text")
-                      .attr("x", function(d, i){ return i* legendWidth; })
-                      .attr("y", 0)
-                      .text(function(d, i){ return legendLabels[i]; })
-                      .attr("fill", "grey")
-                      .style("font-size", "14px");
+                    legend.append("text")
+                    .attr("x", function(d, i){ return i* legendWidth; })
+                    .attr("y", 0)
+                    .text(function(d, i){ return legendLabels[i]; })
+                    .attr("fill", "grey")
+                    .style("font-size", "14px");
+
+
+
 
                 //bar chars : totalproduction and stock
 
