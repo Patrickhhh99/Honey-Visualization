@@ -255,8 +255,8 @@
                     .on("mouseenter", function () {
                         tooltip.style("visibility", "visible")
                         let target = d3.select(this);
-                        target.attr("stroke", "white")
-                            .attr("stroke-width", 3) //////////////// does not work here!!!!!!!!!!!!!!
+                        target.attr("stroke", "#2d3a47")
+                            .attr("stroke-width", 5) //////////////// does not work here!!!!!!!!!!!!!!
                         txt.text(shortcutToState[target.datum().id]);
                         txt2.text(yieldamount[shortcutToState[target.datum().id]]);
 
